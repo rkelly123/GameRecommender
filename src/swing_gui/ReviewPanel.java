@@ -20,6 +20,7 @@ public class ReviewPanel extends JPanel {
     private JTextField ratingField;
     private JButton enterButton;
     private JLabel errorText;
+    private JLabel message;
 
 
     private boolean haveAccess = false;
@@ -56,15 +57,22 @@ public class ReviewPanel extends JPanel {
 
         enterButton = new JButton("Enter");
         enterButton.setFont(new Font("Sans Serif", Font.PLAIN, 20));
+        message = new JLabel();
         enterButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                message.setText("");
+                errorText.setText("");
                 gameToReview = game_nameField.getText();
                 commentStr = commentField.getText();
                 ratingStr = ratingField.getText();
 
-                makeReview();
-                loadIntermediateScreen();
+                int check = makeReview();
+                // loadIntermediateScreen();
+                if (check == 1) {
+                    message.setText("Review has been added!");
+                    message.setForeground(Color.green);
+                }
             }
 
 
@@ -83,6 +91,7 @@ public class ReviewPanel extends JPanel {
         add(commentLabel, constraints);
         add(commentField, constraints);
         add(enterButton, constraints);
+        add(message, constraints);
         add(errorText, constraints);
         setVisible(true);
     }
@@ -118,18 +127,21 @@ public class ReviewPanel extends JPanel {
         // 1. check if user is a reviewer
         // 2. checks if that game is in system
         // 3. make comment and make rating
-        public void makeReview (){
+        public int makeReview (){
             checkReviewer();
             if (haveAccess) {
                 if (getDCH().checkGameInSys(gameToReview)) {
                     makeComment();
                     makeRating();
                     updateGameRatingInfo();
+                    return 1;
                 } else {
                     changeErrorMsg("Error: We do not have this game in system");
+                    return 0;
                 }
             } else {
                 changeErrorMsg("No access error: You are not a verified reviewer");
+                return 0;
             }
         }
 
