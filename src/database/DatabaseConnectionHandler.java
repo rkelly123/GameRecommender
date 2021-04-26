@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import model.*;
 import oracle.jdbc.proxy.annotation.Pre;
 
+import javax.xml.stream.events.Comment;
+
 /**
  * This class handles all database related transactions
  */
@@ -544,6 +546,32 @@ public class DatabaseConnectionHandler {
         return (count == 1);
     }
 
+    // returns true if count is not 1 (there is not already a review for this game by this person)
+    public boolean checkAlreadyReviewed(String username, String game_name){
+        int count = 0;
+        String game_name2 = "";
+        String username2 = "";
+        try {
+            Statement s = connection.createStatement();
+            ResultSet rs = s.executeQuery("SELECT username, game_name " +
+                    "FROM reviews");
+            while(rs.next()){
+                username2 = removeWhiteSpaces(rs.getString(1));
+                game_name2 = removeWhiteSpaces(rs.getString(2));
+                if (username.equals(username2) && game_name.equals(game_name2)){
+                    // user has already reviewed this game
+                    count = 1;
+                }
+            }
+            connection.commit();
+            rs.close();
+        } catch (SQLException e) {
+            System.out.println(EXCEPTION_TAG + " " + e.getMessage());
+            rollbackConnection();
+        }
+        return (count != 1);
+    }
+
     public int getNextCommentNum(String username, String game_name) {
         int count = 0;
         String username2;
@@ -560,7 +588,7 @@ public class DatabaseConnectionHandler {
                     PreparedStatement ps = connection.prepareStatement
                             ("SELECT MAX(comment_num) " +
                             "FROM commentwritesabout " +
-                            "WHERE username.trim = ? AND game_name = ?");
+                            "WHERE username = ? AND game_name = ?");
                     ps.setString(1, username2);
                     ps.setString(2,game_name2);
                     ResultSet rs2 = ps.executeQuery();
@@ -583,7 +611,7 @@ public class DatabaseConnectionHandler {
         String padded = String.format("%-"+ num + "s", str);
         return padded;
     }
-    public void updateGameReviewInfo(String game_name, int ratingAvg){
+    public void updateGameReviewInfo(String game_name, int ratingInt){
         int preRatingSum = 0;
         int totalNum = 0;
         game_name = padString(game_name, 50);
@@ -872,7 +900,7 @@ public class DatabaseConnectionHandler {
         int countCom = 0;
         try {
             PreparedStatement ps = connection.prepareStatement
-                    ("SELECT username, date, COUNT(*) " +
+                    ("SELECT username, ymd, COUNT(*) " +
                             "FROM commentwritesabout " +
                             "WHERE game_name = ? ");
             ps.setString(1, padString(game_name,50));
@@ -892,9 +920,9 @@ public class DatabaseConnectionHandler {
 
                 for (int i = 0; i<count; i++){
                     PreparedStatement ps2 = connection.prepareStatement
-                            ("SELECT comment_string " +
+                            ("SELECT commentstring " +
                                     "FROM commentstring "+
-                                    "WHERE username = ? AND date = ?");
+                                    "WHERE username = ? AND ymd = ?");
                     ps2.setString(1, padString(username[i], 20));
                     ps2.setString(2, date[i]);
                     ResultSet rs2 = ps.executeQuery();
@@ -982,6 +1010,32 @@ public class DatabaseConnectionHandler {
             rollbackConnection();
         }
         return games;
+    }
+
+    public String[] getGameComments(String game_name) {
+        String[] CommentStrings = new String[5];
+        try {
+            PreparedStatement ps = connection.prepareStatement
+                    ("SELECT commentstring " +
+                            "FROM commentstring cs, commentwritesabout cwa " +
+                            "WHERE cwa.game_name = ? AND cs.username = cwa.username");
+            ps.setString(1, padString(game_name, 50));
+            ResultSet rs = ps.executeQuery();
+            if (rs == null) {
+                return null;
+            }
+            for (int i = 0; i < 5; i++) {
+                rs.next();
+                if (rs.getString(1) == null) {
+                    return CommentStrings;
+                }
+                CommentStrings[i] = rs.getString(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(EXCEPTION_TAG + " " + e.getMessage());
+            rollbackConnection();
+        }
+        return CommentStrings;
     }
 
 }

@@ -131,10 +131,15 @@ public class ReviewPanel extends JPanel {
             checkReviewer();
             if (haveAccess) {
                 if (getDCH().checkGameInSys(gameToReview)) {
-                    makeComment();
-                    makeRating();
-                    updateGameRatingInfo();
-                    return 1;
+                    if (getDCH().checkAlreadyReviewed(UserSingleton.getInstance().getUser().getUsername(), gameToReview)) {
+                        makeComment();
+                        makeRating();
+                        updateGameRatingInfo();
+                        return 1;
+                    } else {
+                        changeErrorMsg("Error: You have already reviewed this game");
+                        return 0;
+                    }
                 } else {
                     changeErrorMsg("Error: We do not have this game in system");
                     return 0;

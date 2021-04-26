@@ -17,6 +17,7 @@ public class VideoGamePanel extends JPanel {
 
     private Video_Game game;
     private JList comments;
+    private String[] CommentStrings = new String[5];
 
     public VideoGamePanel(Video_Game game) {
         setLayout(new GridBagLayout());
@@ -110,16 +111,35 @@ public class VideoGamePanel extends JPanel {
 //            add(addCommentField, constraints);
 //        }
 
-        comments = new JList();
-        comments.setPreferredSize(new Dimension(400, 170));
-        updateComments();
-        add(new JLabel("Anonymous Comments:"), constraints);
+        CommentStrings = getCommentStrings();
+
+        comments = new JList(CommentStrings);
+        comments.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        comments.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+        comments.setVisibleRowCount(-1);
+
+        JScrollPane listScroller = new JScrollPane(comments);
+        listScroller.setPreferredSize(new Dimension(250, 80));
+
         add(comments, constraints);
 
         setVisible(true);
     }
 
-    private void updateComments() {
+    private String[] getCommentStrings() {
+        CommentStrings = getCommentsFromDatabase();
+        if (CommentStrings == null) {
+            return null;
+        }
+        return CommentStrings;
+    }
+
+    private String[] getCommentsFromDatabase() {
+        // Retrieve game comments from database
+        return getDCH().getGameComments(game.getGameName());
+    }
+
+/*    private void updateComments() {
         comments.setModel(getCommentsForGame(game));
     }
 
@@ -139,7 +159,7 @@ public class VideoGamePanel extends JPanel {
         ArrayList<Comment_String> comments = new ArrayList<>();
         comments = getDCH().getComments(game.getGameName(), comments);
         return comments;
-    }
+    }*/
 
     // For the purposes of using the database
     private DatabaseConnectionHandler getDCH () {
