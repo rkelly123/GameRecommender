@@ -252,13 +252,13 @@ public class DatabaseConnectionHandler {
     }
 
     // Only call this one if its the first time the games have been inputted as similar
-    public void insertSimilarTo(Video_Game game1, Video_Game game2) {
+    public void insertSimilarTo(Video_Game game1, Video_Game game2, String username) {
         try {
             PreparedStatement ps = connection.prepareStatement("INSERT INTO similarto VALUES (?,?,?)");
 
             ps.setString(1, game1.getGameName());
             ps.setString(2, game2.getGameName());
-            ps.setInt(3, 1);
+            ps.setString(3, username);
 
             ps.executeUpdate();
             connection.commit();
@@ -672,101 +672,23 @@ public class DatabaseConnectionHandler {
 
     /// CHOOSE FAVOURITES FUNCTIONALITY (insert is above)
 
-    public void increaseSimilarity(String game_name_1, String game_name_2) {
-        int countPrev = 0;
-        game_name_1 = padString(game_name_1, 50);
-        game_name_2 = padString(game_name_2, 50);
-        try {
-            PreparedStatement ps = connection.prepareStatement
-                    ("SELECT COUNT(game_name_1), simcount " +
-                            "FROM similarto " +
-                            "WHERE game_name_1 = ? AND game_name_2 = ? " +
-                            "GROUP BY simcount");
-            ps.setString(1, game_name_1);
-            ps.setString(2, game_name_2);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                System.out.println("existing");
-                countPrev = rs.getInt(2);
-                increaseSimilarityExists(game_name_1, game_name_2, countPrev);
-            } else {
-                System.out.println("new");
-                Video_Game game1 = new Video_Game(game_name_1, null, 0, 0);
-                Video_Game game2 = new Video_Game(game_name_2, null, 0, 0);
-                insertSimilarTo(game1, game2);
-            }
-        } catch (SQLException e) {
-            System.out.println(EXCEPTION_TAG + " " + e.getMessage());
-            rollbackConnection();
-        }
-    }
-
-    public void increaseSimilarityExists(String game_name_1, String game_name_2, int countPrev) {
-        try {
-            PreparedStatement ps = connection.prepareStatement
-                    ("UPDATE similarto " +
-                            "SET simcount = ? " +
-                            "WHERE game_name_1 = ? AND game_name_2 = ?");
-            ps.setInt(1, countPrev + 1);
-            ps.setString(2, padString(game_name_1, 50));
-            ps.setString(3, padString(game_name_2, 50));
-            ResultSet rs = ps.executeQuery();
-            rs.next();
-        } catch (SQLException e) {
-            System.out.println(EXCEPTION_TAG + " " + e.getMessage());
-            rollbackConnection();
-        }
+    public void increaseSimilarity(String game_name_1, String game_name_2, String username) {
+        Video_Game game1 = new Video_Game(game_name_1, null, 0, 0);
+        Video_Game game2 = new Video_Game(game_name_2, null, 0, 0);
+        insertSimilarTo(game1, game2, username);
     }
 
     /// Find games to delete using getFavourites() method below
-    public void decreaseSimilarity(String game_name_1, String game_name_2) {
+    public void decreaseSimilarity(String game_name_1, String game_name_2, String username) {
         int countPrev = 0;
-        try {
-            PreparedStatement ps = connection.prepareStatement
-                    ("SELECT simcount " +
-                            "FROM similarto " +
-                            "WHERE game_name_1 = ? AND game_name_2 = ?");
-            ps.setString(1, padString(game_name_1, 50));
-            ps.setString(2, padString(game_name_2, 50));
-            ResultSet rs = ps.executeQuery();
-            rs.next();
-            countPrev = rs.getInt(2);
-            if (countPrev >= 2) {
-                decreaseSimilarityNoDelete(game_name_1, game_name_2, countPrev);
-            } else {
-                deleteSimilarTo(game_name_1, game_name_2);
-            }
-        } catch (SQLException e) {
-            System.out.println(EXCEPTION_TAG + " " + e.getMessage());
-            rollbackConnection();
-        }
-    }
-
-    public void decreaseSimilarityNoDelete(String game_name_1, String game_name_2, int countPrev) {
-        try {
-            PreparedStatement ps = connection.prepareStatement
-                    ("UPDATE similarto " +
-                            "SET simcount = ? " +
-                            "WHERE game_name_1 = ? AND game_name_2 = ?");
-            ps.setInt(1, countPrev - 1);
-            ps.setString(2, padString(game_name_1, 50));
-            ps.setString(3, padString(game_name_2, 50));
-            ResultSet rs = ps.executeQuery();
-            rs.next();
-        } catch (SQLException e) {
-            System.out.println(EXCEPTION_TAG + " " + e.getMessage());
-            rollbackConnection();
-        }
-    }
-
-    public void deleteSimilarTo(String game_name_1, String game_name_2) {
         try {
             PreparedStatement ps = connection.prepareStatement
                     ("DELETE " +
                             "FROM similarto " +
-                            "WHERE game_name_1 = ? AND game_name_2 = ?");
+                            "WHERE game_name_1 = ? AND game_name_2 = ? AND username = ?");
             ps.setString(1, padString(game_name_1, 50));
             ps.setString(2, padString(game_name_2, 50));
+            ps.setString(3, padString(username, 20));
             ResultSet rs = ps.executeQuery();
             rs.next();
         } catch (SQLException e) {
@@ -822,15 +744,15 @@ public class DatabaseConnectionHandler {
         String[] recommendedGames = new String[5];
         try {
             PreparedStatement ps = connection.prepareStatement
-                    ("SELECT game_name_2, SUM(simcount) AS theSum " +
+                    ("SELECT game_name_2 " +
                             "FROM similarto " +
                             "WHERE game_name_1 = ? OR game_name_1 = ? OR game_name_1 = ? OR game_name_1 = ? " +
                                 "OR game_name_1 = ? " +
                             "GROUP BY game_name_2 " +
-                            "ORDER BY theSum DESC");
+                            "ORDER BY COUNT(*) DESC");
             for (int i = 0; i < 5; i++) {
                 favouriteGames[i] = padString(favouriteGames[i], 50);
-                ps.setString(i, favouriteGames[i]);
+                ps.setString(i+1, favouriteGames[i]);
             }
             ResultSet rs = ps.executeQuery();
             int numRecs = 0;
@@ -855,29 +777,31 @@ public class DatabaseConnectionHandler {
     public boolean goodSettings(String game_name, UserSettings usettings) {
         try {
             PreparedStatement ps = connection.prepareStatement
-                    ("SELECT platform_type, age_rating " +
-                            "FROM onplatform op NATURAL JOIN videogame vg NATURAL JOIN gamedescription gd " +
-                            "WHERE vg.description = gd.game_description AND vg.game_name = ?");
+                    ("SELECT op.platform_type, gd.age_rating " +
+                            "FROM onplatform op, videogame vg, gamedescription gd " +
+                            "WHERE vg.description = gd.game_description AND vg.game_name = ? AND vg.game_name = op.game_name");
             ps.setString(1, padString(game_name, 50));
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                if (rs.getInt(2) > usettings.getMaxAgeAllowed()) {
-                    return false;
+                if (usettings.maxAgeExists()) {
+                    if (rs.getInt(2) > usettings.getMaxAgeAllowed()) {
+                        return false;
+                    }
                 }
-                switch(rs.getString(1)) {
-                    case "pc":
+                switch(removeWhiteSpaces(rs.getString(1))) {
+                    case "PC":
                         if (usettings.isPcAllowed()) {
                             return true;
                         }
-                    case "playstation":
+                    case "PlayStation":
                         if (usettings.isPlaystationAllowed()) {
                             return true;
                         }
-                    case "xbox":
+                    case "Xbox":
                         if (usettings.isXboxAllowed()) {
                             return true;
                         }
-                    case "nintendo":
+                    case "Nintendo":
                         if (usettings.isNintendoAllowed()) {
                             return true;
                         }

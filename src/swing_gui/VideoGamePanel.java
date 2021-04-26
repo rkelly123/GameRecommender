@@ -43,8 +43,8 @@ public class VideoGamePanel extends JPanel {
                 // Similarity
                 for (int i = 0; i < alreadyFavourites.length; i++) {
                     if (alreadyFavourites[i] != null) {
-                        dbc.increaseSimilarity(alreadyFavourites[i], game.getGameName());
-                        dbc.increaseSimilarity(game.getGameName(), alreadyFavourites[i]);
+                        dbc.increaseSimilarity(alreadyFavourites[i], game.getGameName(), user.getUsername());
+                        dbc.increaseSimilarity(game.getGameName(), alreadyFavourites[i], user.getUsername());
                     }
                 }
 

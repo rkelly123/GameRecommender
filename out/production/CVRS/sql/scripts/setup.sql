@@ -174,13 +174,16 @@ CREATE TABLE similarto
 (
     game_name_1 CHAR(50),
     game_name_2 CHAR(50),
-    Count       INTEGER NOT NULL,
-    PRIMARY KEY (game_name_1, game_name_2),
+    username    CHAR(20),
+    PRIMARY KEY (game_name_1, game_name_2, username),
     FOREIGN KEY (game_name_1)
         REFERENCES videogame
         ON DELETE CASCADE,
     FOREIGN KEY (game_name_2)
         REFERENCES videogame
+        ON DELETE CASCADE,
+    FOREIGN KEY (username)
+        REFERENCES systemuser
         ON DELETE CASCADE
 );
 

@@ -21,7 +21,7 @@ public class GameRecsScreen extends JPanel {
         constraints.gridwidth = GridBagConstraints.REMAINDER;
         constraints.fill = GridBagConstraints.HORIZONTAL;
 
-        recommendationLabel = new JLabel("Our top5 recommendations: ");
+        recommendationLabel = new JLabel("Our top 5 recommendations: ");
         recommendationLabel.setFont(new Font("Sans Serif", Font.PLAIN, 25));
 
         addedList = new JList(gameList);

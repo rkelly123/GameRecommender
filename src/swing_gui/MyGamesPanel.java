@@ -49,8 +49,8 @@ public class MyGamesPanel extends JPanel {
                         for (int j = i; j < favorites.length; j++) {
                             String innerStr = favorites[j];
                             if (innerStr != null && innerStr != str) {
-                                dbc.decreaseSimilarity(str, innerStr);
-                                dbc.decreaseSimilarity(innerStr, str);
+                                dbc.decreaseSimilarity(str, innerStr, user.getUsername());
+                                dbc.decreaseSimilarity(innerStr, str, user.getUsername());
                             }
                         }
                     }

@@ -14,7 +14,7 @@ public class ReviewScreen extends JPanel {
         ReviewPanel reviewPanel = new ReviewPanel();
         reviewPanel.setPreferredSize(new Dimension(550, 345));
 
-        TopArea topArea = new TopArea("Find and Add Games");
+        TopArea topArea = new TopArea("Leave a review");
         topArea.setPreferredSize(new Dimension(550, 30));
 
         add(topArea, constraints);

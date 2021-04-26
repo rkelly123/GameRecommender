@@ -30,6 +30,8 @@ public class RecommendationsPanel extends JPanel {
         title.setHorizontalAlignment(JLabel.CENTER);
         title.setFont(new Font("Sans Serif", Font.PLAIN, 40));
 
+        getGameNames();
+
         game1 = new JLabel(gameTop1);
         game1.setFont(new Font("Sans Serif", Font.PLAIN, 20));
         game2 = new JLabel(gameTop2);
@@ -40,11 +42,6 @@ public class RecommendationsPanel extends JPanel {
         game4.setFont(new Font("Sans Serif", Font.PLAIN, 20));
         game5 = new JLabel(gameTop5);
         game5.setFont(new Font("Sans Serif", Font.PLAIN, 20));
-
-        getGameNames();
-
-        recommendationLabel = new JLabel("Our top5 recommendations: ");
-        recommendationLabel.setFont(new Font("Sans Serif", Font.PLAIN, 25));
 
         setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
@@ -63,37 +60,28 @@ public class RecommendationsPanel extends JPanel {
         setVisible(true);
     }
 
-    private void displayGames() {
-        setLayout(new GridBagLayout());
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.gridwidth = GridBagConstraints.REMAINDER;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        add(title,constraints);
-        add(recommendationLabel, constraints);
-    }
-
     private void getGameNames() {
         //fetch top 5 game names that are calculated from alg and set the global variables
         String [] gameList = getDCH().makeRecommendations
                 (getDCH().getFavouriteGames(user.getUsername()), UserSingleton.getInstance().getSettings());
         if (gameList[0] != null) {
-            game1.setText("1. " + gameList[0]);
+            gameTop1 = gameList[0];
         }
 
         if (gameList[1] != null) {
-            game2.setText("2. " + gameList[1]);
+            gameTop2 = gameList[1];
         }
 
         if (gameList[2] != null) {
-            game3.setText("3. " + gameList[2]);
+            gameTop3 = gameList[2];
         }
 
         if (gameList[3] != null) {
-            game4.setText("4. " + gameList[3]);
+            gameTop4 = gameList[3];
         }
 
         if (gameList[4] != null) {
-            game5.setText("5. " + gameList[4]);
+            gameTop5 = gameList[4];
         }
 
 //        game1.setText(gameList[0] + "1. Smash Brothers Ultimate");
@@ -108,7 +96,6 @@ public class RecommendationsPanel extends JPanel {
         return UserSingleton.getInstance().getDCH();
     }
 
-    // This should be called upon the successful login/creation of an account
     private void loadIntermediateScreen() {
         JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
         topFrame.add(new IntermediateScreen());
